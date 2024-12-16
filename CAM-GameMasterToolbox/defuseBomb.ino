@@ -24,13 +24,13 @@ char keypadKeys[KEYPAD_ROWS][KEYPAD_COLS] = {
 LiquidCrystal_I2C lcd(LCD_I2C_ADDR, LCD_COLUMNS, LCD_LINES);
 Keypad keypad = Keypad(makeKeymap(keypadKeys), rowPins, colPins, KEYPAD_ROWS, KEYPAD_COLS);
 
-// Constantes do jogo
-const int BOMB_MAX_TIME_MINUTES = 1; // Tempo em minutos para o countdown
-int countdownTime = BOMB_MAX_TIME_MINUTES * 60; // Tempo em segundos
-bool isCountdownActive = false;
-bool isStopRequest = false; // Para rastrear solicitação de parada
+// game constants
+const int BOMB_MAX_TIME_MINUTES = 15;             // Time in minutes before "bomb" explode
+int countdownTime = BOMB_MAX_TIME_MINUTES * 60;   // Convert time in seconds
+bool isCountdownActive = false;                   // Flag to use to control if the bomb clock is running
+bool isStopRequest = false;                       // Flag to control the disarm process
 
-// Variáveis para detecção de pressionamento longo
+// Variables to "control" ht keypad long press
 unsigned long keyPressedTime = 0;
 bool isKeyDPressed = false;
 
@@ -50,21 +50,21 @@ void setup() {
 
 
 void loop() {
-  char key = keypad.getKey(); // Lê a tecla pressionada
+  char key = keypad.getKey();                                 // Read pressed key
 
 
-  if (key) { // Verifica se alguma tecla foi pressionada
-    startGame(key);
-    disarmBombAction(key);
-  } else { // Verifica se a tecla 'D' foi liberada
-    if (isKeyDPressed && keypad.getState() == RELEASED) {
-      isKeyDPressed = false;
+  if (key) {                                                  // Check the pressed key
+    startGame(key);                                           // Start the game with correct pessed key (sended by "key" argument - 'A' key)
+    disarmBombAction(key);                                    // User start disarm bomb with correct pressed key (sended by "key" argument - 'D' key)
+  } else {
+    if (isKeyDPressed && keypad.getState() == RELEASED) {     // Check if the D press flag is "true" and key was released
+      isKeyDPressed = false;                                  // Turn off the flag to control the disarm key
     }
   }
 
-  checkDisarmAction(isKeyDPressed);
+  checkDisarmAction(isKeyDPressed);                           // Check if user started disarm bomb with correct pressed key (sended by "key" argument)
 
-  if (isCountdownActive) updateCountdownAndCheckBombStatus();
+  if (isCountdownActive) updateCountdownAndCheckBombStatus(); // Check if bomb time left is running and call "updateCountdownAndCheckBombStatus" method
 }
 
 
@@ -77,25 +77,33 @@ void loop() {
 #############################################################################
 */
 
-
+/* 
+Check the LCD connection with arduino
+*/
 void checkLCD() {
-  lcd.init();
-  lcd.backlight();
+  lcd.init();         // init the LCD
+  lcd.backlight();    // Turn on the LCD backlight
   Serial.println("CAM: Check LCD... Ready");
 }
 
 
+/*
+Check the Buzzer connection to arduino
+*/
 void checkBuzzer() {
-  pinMode(pinBuzzer, OUTPUT);
+  pinMode(pinBuzzer, OUTPUT);  // Set pin for buzzer to output
   Serial.println("CAM: Check BUZZER... Ready");
 }
 
 
+/* 
+Check the LED(s) connection to arduino
+*/
 void checkLeds() {
-  pinMode(pinLedRed, OUTPUT);
-  pinMode(pinLedGreen, OUTPUT);
-  blinkLED(pinLedRed, 3, 200);
-  blinkLED(pinLedGreen, 3, 200);
+  pinMode(pinLedRed, OUTPUT);     // Set pin for red led to output
+  pinMode(pinLedGreen, OUTPUT);   // Set pin for green led to output
+  blinkLED(pinLedRed, 3, 200);    // Testing red led blinking 3 times
+  blinkLED(pinLedGreen, 3, 200);  // Testing green led blinking 3 times
   Serial.println("CAM: Check LEDs... Ready");
   delay(500);
 }
@@ -110,6 +118,13 @@ void checkLeds() {
 */
 
 
+/*
+Function to blink led. User insert wich pin (led) want use, how many time we want blinks and delay time between each blink
+
+@param linLed Arduino Pin where Led is connected
+@param blinkTimes how many times led blink
+@param delayTime delay time between each blink
+ */
 void blinkLED(byte pinLed, byte blinkTimes, int delayTime) {
   digitalWrite(pinLed, LOW);
  
@@ -122,20 +137,32 @@ void blinkLED(byte pinLed, byte blinkTimes, int delayTime) {
 }
 
 
+/**
+Function to write/show messages on LCD
+
+@param message User write message to show
+@param posX LCD x position (column) to start write the message
+@param posY LCD y position (row) to start write the message
+ */
 void showLCDMessage(String message, unsigned short posX, unsigned short posY) {
   lcd.setCursor(posX, posY);
   lcd.print(message);
 }
 
 
+/**
+Show progress bar when defuse the bomb
+
+@param progress show how many char write to simulate progress bar when user defuse the bomb
+ */
 void displayProgressBar(int progress) {
   lcd.setCursor(0, 1);
   lcd.print("[");
-  for (int i = 0; i < LCD_COLUMNS - 2; i++) {
+  for (int i = 0; i < LCD_COLUMNS - 2; i++) {  // -2 because we use 2 char to write the char "[" and "]"
     if (i < progress) {
-      lcd.print("#"); // Preenchimento da barra
+      lcd.print("#");                          // If i < number of possible write chars, write the bar "#"
     } else {
-      lcd.print(" "); // Espaço vazio
+      lcd.print(" ");                          // Else, write/create white space
     }
   }
   lcd.print("]");
