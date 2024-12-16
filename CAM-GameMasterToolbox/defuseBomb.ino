@@ -2,7 +2,7 @@
 #include <LiquidCrystal_I2C.h>
 
 // Definições de hardware
-#define LCD_I2C_ADDR    0x27
+#define LCD_I2C_ADDR    0x3F
 #define LCD_COLUMNS     16
 #define LCD_LINES       2
 #define KEYPAD_ROWS     4
@@ -54,10 +54,8 @@ void loop() {
 
 
   if (key) { // Verifica se alguma tecla foi pressionada
-
     startGame(key);
     disarmBombAction(key);
-
   } else { // Verifica se a tecla 'D' foi liberada
     if (isKeyDPressed && keypad.getState() == RELEASED) {
       isKeyDPressed = false;
@@ -66,10 +64,10 @@ void loop() {
 
   checkDisarmAction(isKeyDPressed);
 
-  if (isCountdownActive) {
-    updateCountdownAndCheckBombStatus();
-  }
+  if (isCountdownActive) updateCountdownAndCheckBombStatus();
 }
+
+
 
 
 
@@ -237,7 +235,7 @@ void disarmBombAction(char key){
     if (!isKeyDPressed) {
       isKeyDPressed = true;
       keyPressedTime = millis(); // Marca o tempo inicial
-      displayProgressBar(0); // Mostra a barra no início
+      displayProgressBar(0);     // Mostra a barra no início
     }
   }
 }
@@ -277,3 +275,4 @@ void updateCountdownAndCheckBombStatus() {
     }
   }
 }
+
