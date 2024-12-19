@@ -12,8 +12,8 @@
 #define pinLedGreen 3
 #define pinBuzzer   4
 
-byte rowPins[KEYPAD_ROWS] = {5, 6, 7, 8};
-byte colPins[KEYPAD_COLS] = {9, 10, 11, 12};
+byte rowPins[KEYPAD_ROWS] = {5, 8, 12, 6};
+byte colPins[KEYPAD_COLS] = {A7, A7, A7, 7};    //Ignore A7 pin
 char keypadKeys[KEYPAD_ROWS][KEYPAD_COLS] = {
   {'1','2','3','A'},
   {'4','5','6','B'},
@@ -121,7 +121,7 @@ void checkLeds() {
 /*
 Function to blink led. User insert wich pin (led) want use, how many time we want blinks and delay time between each blink
 
-@param linLed Arduino Pin where Led is connected
+@param pinLed Arduino Pin where Led is connected
 @param blinkTimes how many times led blink
 @param delayTime delay time between each blink
  */
@@ -156,14 +156,11 @@ Show progress bar when defuse the bomb
 @param progress show how many char write to simulate progress bar when user defuse the bomb
  */
 void displayProgressBar(int progress) {
-  lcd.setCursor(0, 1);
-  lcd.print("[");
+  showLCDMessage("   DESARMANDO      ", 0, 0);
+  showLCDMessage("[", 0, 1);
   for (int i = 0; i < LCD_COLUMNS - 2; i++) {  // -2 because we use 2 char to write the char "[" and "]"
-    if (i < progress) {
-      lcd.print("#");                          // If i < number of possible write chars, write the bar "#"
-    } else {
-      lcd.print(" ");                          // Else, write/create white space
-    }
+    //if ( expr ? true_condition : false_condition );
+    if (i < progress ? lcd.print("#") : lcd.print(" ") );
   }
   lcd.print("]");
 }
@@ -175,7 +172,7 @@ void checkDisarmAction(boolean isKeyDPressed){
 
     if (pressDuration >= 3000) { // Se pressionado por pelo menos 3 segundos
       isCountdownActive = false; // Para o timer
-      isStopRequest = true;   // Flag para indicar parada
+      isStopRequest = true;      // Flag para indicar parada
       lcd.clear();
       while(true){
         messageCTWin();
